@@ -1,0 +1,45 @@
+name: Pull picks
+
+on:
+  schedule:
+    # Times are UTC. 16:00, 19:00 and 22:00 UTC = 10:00, 13:00 and 16:00 at UTC-6.
+    - cron: "0 16,19,22 * * *"
+  workflow_dispatch:   # lets you press "Run workflow" by hand
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Python packages
+        run: pip install -r requirements.txt
+
+      - name: Install the browser
+        run: playwright install --with-deps chromium
+
+      - name: Write the Google key to a temporary file
+        run: printf '%s' "$GCP_KEY_JSON" > "$RUNNER_TEMP/key.json"
+        env:
+          GCP_KEY_JSON: ${{ secrets.GCP_KEY_JSON }}
+
+      - name: Capture picks and write to the sheet
+        run: python nst_timhortons_picks_gsheets_v3.py
+        env:
+          SERVICE_ACCOUNT_FILE: ${{ runner.temp }}/key.json
+          GOOGLE_SHEET_ID: ${{ secrets.SHEET_ID }}
+          ARTIFACT_DIR: ${{ runner.temp }}
+
+      - name: Keep the failure screenshot
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-screenshot
+          path: ${{ runner.temp }}/thpicks_failed.png
+          if-no-files-found: ignore
