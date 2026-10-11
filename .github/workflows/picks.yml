@@ -2,14 +2,17 @@ name: Pull picks
 
 on:
   schedule:
-    # Times are UTC. 16:00, 19:00 and 22:00 UTC = 10:00, 13:00 and 16:00 at UTC-6.
-    - cron: "0 16,19,22 * * *"
+    # Times are UTC. Alberta is UTC-6 all year, so 14:45 UTC = 8:45 AM.
+    # 25 runs per day, every 30 minutes, 8:45 AM to 8:45 PM Alberta time.
+    - cron: "45 14 * * *"          # 8:45 AM
+    - cron: "15,45 15-23 * * *"    # 9:15 AM to 5:45 PM
+    - cron: "15,45 0-2 * * *"      # 6:15 PM to 8:45 PM
   workflow_dispatch:   # lets you press "Run workflow" by hand
 
 jobs:
   pull:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
 
@@ -20,6 +23,12 @@ jobs:
 
       - name: Install Python packages
         run: pip install -r requirements.txt
+
+      - name: Remember the downloaded browser between runs
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
 
       - name: Install the browser
         run: playwright install --with-deps chromium
