@@ -24,29 +24,40 @@ jobs:
       - name: Install Python packages
         run: pip install -r requirements.txt
 
+      - name: Write the Google key to a temporary file
+        run: printf '%s' "$GCP_KEY_JSON" > "$RUNNER_TEMP/key.json"
+        env:
+          GCP_KEY_JSON: ${{ secrets.GCP_KEY_JSON }}
+
+      # Cheap check: once today's pool has closed, the slow steps below are skipped.
+      - name: Check whether today's pool has closed
+        id: gate
+        run: python nst_timhortons_picks_gsheets_v4.py --gate
+        env:
+          SERVICE_ACCOUNT_FILE: ${{ runner.temp }}/key.json
+          GOOGLE_SHEET_ID: ${{ secrets.SHEET_ID }}
+
       - name: Remember the downloaded browser between runs
+        if: steps.gate.outputs.skip != 'true'
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
 
       - name: Install the browser
+        if: steps.gate.outputs.skip != 'true'
         run: playwright install --with-deps chromium
 
-      - name: Write the Google key to a temporary file
-        run: printf '%s' "$GCP_KEY_JSON" > "$RUNNER_TEMP/key.json"
-        env:
-          GCP_KEY_JSON: ${{ secrets.GCP_KEY_JSON }}
-
       - name: Capture picks and write to the sheet
-        run: python nst_timhortons_picks_gsheets_v3.py
+        if: steps.gate.outputs.skip != 'true'
+        run: python nst_timhortons_picks_gsheets_v4.py
         env:
           SERVICE_ACCOUNT_FILE: ${{ runner.temp }}/key.json
           GOOGLE_SHEET_ID: ${{ secrets.SHEET_ID }}
           ARTIFACT_DIR: ${{ runner.temp }}
 
       - name: Capture goalie starters and write to the sheet
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.gate.outputs.skip != 'true' }}
         run: python goaliepost_starters.py
         env:
           SERVICE_ACCOUNT_FILE: ${{ runner.temp }}/key.json
