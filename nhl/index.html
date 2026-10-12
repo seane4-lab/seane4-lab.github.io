@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NHL Goal Odds</title>
+<meta name="description" content="Estimated chance that each Hockey Challenge pick scores tonight, by group.">
+<style>
+:root{
+  --bg:#f6f7f9; --card:#fff; --ink:#14181f; --muted:#5b6575; --line:#e3e6eb;
+  --accent:#0b5fff; --good:#0f8a4b; --bar:#0b5fff; --bar-bg:#e9edf3; --head:#f0f2f6;
+  --chip:#eef1f5; --pp1:#d8f3e3; --pp1-ink:#0b5c33; --pp2:#fff0cf; --pp2-ink:#7a5200;
+  --shadow:0 1px 2px rgba(20,24,31,.06),0 4px 14px rgba(20,24,31,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1117; --card:#161b24; --ink:#e8ebf1; --muted:#98a2b3; --line:#262d3a;
+    --accent:#6ea0ff; --good:#4cc38a; --bar:#6ea0ff; --bar-bg:#232b39; --head:#1b212c;
+    --chip:#1f2633; --pp1:#14352a; --pp1-ink:#7be0ad; --pp2:#3a2f12; --pp2-ink:#f2c76b; --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1117; --card:#161b24; --ink:#e8ebf1; --muted:#98a2b3; --line:#262d3a;
+  --accent:#6ea0ff; --good:#4cc38a; --bar:#6ea0ff; --bar-bg:#232b39; --head:#1b212c;
+  --chip:#1f2633; --pp1:#14352a; --pp1-ink:#7be0ad; --pp2:#3a2f12; --pp2-ink:#f2c76b; --shadow:none;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:16px 16px 40px}
+header{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+h1{font-size:1.35rem;line-height:1.15;margin:0;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:.85rem}
+.stamp{font-size:.82rem;color:var(--muted)}
+.stamp b{color:var(--ink);font-weight:600}
+.banner{background:var(--pp2);color:var(--pp2-ink);border-radius:8px;padding:6px 10px;font-size:.84rem;margin-bottom:10px;display:none}
+
+section{margin-top:12px}
+section h2{font-size:.95rem;margin:0 0 5px;display:flex;gap:8px;align-items:baseline}
+section h2 small{font-weight:400;color:var(--muted);font-size:.78rem}
+.table{background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);overflow:hidden}
+.r{display:grid;align-items:center;gap:0 10px;padding:0 10px;min-height:34px;border-top:1px solid var(--line);
+   grid-template-columns:22px minmax(235px,1.6fr) 82px 46px minmax(170px,1.2fr) 58px 32px 30px minmax(112px,1fr)}
+.r.h{background:var(--head);border-top:0;min-height:30px;padding-top:3px;padding-bottom:3px;line-height:1.15;font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600}
+.r.scored{box-shadow:inset 3px 0 0 var(--good)}
+.rank{color:var(--muted);text-align:center;font-size:.8rem;font-variant-numeric:tabular-nums}
+.who{min-width:0;display:flex;gap:6px;align-items:center;white-space:nowrap}
+.name{font-weight:650;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.game{color:var(--muted);font-size:.8rem;white-space:nowrap}
+.chip{flex:none}
+.logo{width:20px;height:20px;object-fit:contain;flex:none}
+.badge{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;flex:none;
+  font-size:.52rem;font-weight:800;letter-spacing:-.02em;color:#fff;line-height:1}
+.mob-sub .badge{width:14px;height:14px;font-size:.4rem}
+.tag{color:var(--muted);font-size:.72rem;opacity:.9;margin-left:2px}
+.tag.conf{color:var(--good);font-weight:600;opacity:1}
+.gl{display:flex;gap:7px;align-items:center;min-width:0;font-size:.86rem}
+.gl span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.yes{color:var(--good);font-weight:700;text-align:center;font-size:.86rem}
+.no{color:var(--muted);text-align:center;opacity:.5}
+.goalie{color:var(--muted);font-size:.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.n{text-align:right;font-variant-numeric:tabular-nums;font-size:.86rem}
+.dim{color:var(--muted)}
+.fin{display:flex;gap:8px;align-items:center;justify-content:flex-end}
+.fin b{font-size:1rem;font-variant-numeric:tabular-nums;min-width:46px;text-align:right}
+.track{flex:1;height:5px;border-radius:99px;background:var(--bar-bg);overflow:hidden;min-width:30px}
+.bar{height:100%;background:var(--bar);border-radius:99px}
+.odds{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:.86rem}
+.chip{border-radius:999px;padding:0 6px;font-size:.68rem;font-weight:700;line-height:1.5;background:var(--chip);color:var(--muted)}
+.chip.pp1{background:var(--pp1);color:var(--pp1-ink)} .chip.pp2{background:var(--pp2);color:var(--pp2-ink)}
+.chip.ok{background:var(--pp1);color:var(--pp1-ink)}
+.empty{padding:14px 10px;color:var(--muted);font-size:.88rem}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.mob-sub{display:none;gap:5px;align-items:center;color:var(--muted);font-size:.74rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mob-sub .logo{width:14px;height:14px}
+.short{display:none}
+.who-col{min-width:0}
+@media (max-width:760px){
+  .r{grid-template-columns:20px minmax(0,1fr) 40px 58px;gap:0 6px;padding:4px 10px}
+  .r > .goalie,.r > .game,.r > .xga,.r > .gp,.r > .gg,.r .track{display:none}
+  .chip.line{display:none}
+  .fin{justify-content:flex-end}
+  .fin b{min-width:0}
+  .mob-sub{display:flex}
+  .full{display:none}
+  .short{display:inline}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>NHL Goal Odds</h1>
+      <div class="sub">Chance each Hockey Challenge pick scores tonight</div>
+    </div>
+    <div class="stamp" id="stamp"></div>
+  </header>
+  <div class="banner" id="banner"></div>
+  <main id="groups"></main>
+</div>
+
+<script>
+// ---- Settings -------------------------------------------------------------
+// Paste your three "Publish to web" CSV links here to make the page live.
+// Leave them empty to show the snapshot saved in this file.
+const SHEET_CSV = {
+  1: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTiF95zjkEhaUu-4MXsIjr3WFZ-56PmKC8xX0MfksnfFG5NzeAee8s16_nw9qfgnyEexvy2fLZqnA8S/pub?gid=463421242&single=true&output=csv",
+  2: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTiF95zjkEhaUu-4MXsIjr3WFZ-56PmKC8xX0MfksnfFG5NzeAee8s16_nw9qfgnyEexvy2fLZqnA8S/pub?gid=1731172311&single=true&output=csv",
+  3: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTiF95zjkEhaUu-4MXsIjr3WFZ-56PmKC8xX0MfksnfFG5NzeAee8s16_nw9qfgnyEexvy2fLZqnA8S/pub?gid=124383774&single=true&output=csv"
+};
+const REFRESH_MS = 5 * 60 * 1000;
+const GROUP_NAMES = { 1: "Pick #1", 2: "Pick #2", 3: "Pick #3" };
+
+// Snapshot (used until the links above are filled in, or if loading fails).
+const SNAPSHOT = {"1": "Player,Team,Opp,H/A,Pos,Line,PP unit,Opp goalie,Goalie GAA used,GP,Weight on this season,Base chance (blend),After goalie + home/away,Shot quality z,After shot quality,Final P(goal),Odds (American),Scored today,G,SOG,High-danger SOG (0-15),\"Updated: Oct 12, 12:52 AM\"\nKirill Kaprizov,MIN,VGK,Home,F,F1,PP1,Adin Hill (probable),2.87,5,14%,45.9%,43.9%,2.43,48.0%,58.5%,-141,,6,13,5,\nMatt Boldy,MIN,VGK,Home,F,F1,PP1,Adin Hill (probable),2.87,5,14%,36.8%,35.1%,2.55,40.0%,52.1%,-109,,1,23,6,\nMatthew Tkachuk,FLA,BUF,Away,F,F1,PP1,Colten Ellis (likely),3.04,5,14%,33.9%,32.7%,2.17,37.1%,49.8%,+101,,3,11,4,\nJack Hughes,NJD,OTT,Home,F,F1,PP1,Linus Ullmark (probable),2.55,4,11%,35.5%,30.7%,2.52,35.9%,48.9%,+105,,1,15,4,\nBrady Tkachuk,FLA,BUF,Away,F,F1,PP1,Colten Ellis (likely),3.04,5,14%,30.4%,29.3%,2.93,35.5%,48.5%,+106,,0,12,2,\nJack Eichel,VGK,MIN,Away,F,F1,PP1,Filip Gustavsson (probable),2.77,6,17%,34.3%,30.7%,1.75,34.3%,47.6%,+110,,3,18,6,\nDrake Batherson,OTT,NJD,Away,F,F1,PP1,Nico Daws (probable),3.30,5,14%,31.3%,32.3%,0.93,34.1%,47.5%,+111,,3,12,4,\nSam Reinhart,FLA,BUF,Away,F,F2,PP1,Colten Ellis (likely),3.04,5,14%,28.5%,27.5%,1.46,30.7%,44.7%,+124,,0,12,5,\nTomas Hertl,VGK,MIN,Away,F,F3,PP1,Filip Gustavsson (probable),2.77,6,17%,28.7%,25.5%,1.92,29.8%,44.0%,+127,,3,17,12,\nNico Hischier,NJD,OTT,Home,F,F2,PP1,Linus Ullmark (probable),2.55,4,11%,29.9%,25.7%,1.56,29.1%,43.5%,+130,,2,9,4,\nSam Bennett,FLA,BUF,Away,F,F1,PP1,Colten Ellis (likely),3.04,5,14%,25.6%,24.6%,1.39,27.8%,42.3%,+136,,0,9,4,\nJoel Eriksson Ek,MIN,VGK,Home,F,F1,PP1,Adin Hill (probable),2.87,5,14%,23.9%,22.6%,1.78,26.8%,41.6%,+141,,0,14,4,\nJack Quinn,BUF,FLA,Home,F,F1,PP1,Jacob Markstrom (probable),2.90,5,14%,25.3%,24.1%,0.67,25.6%,40.7%,+146,,2,14,3,\nCarter Verhaeghe,FLA,BUF,Away,F,F2,PP2,Colten Ellis (likely),3.04,5,14%,26.2%,25.2%,0.69,26.7%,33.5%,+199,,1,6,1,\nShane Pinto,OTT,NJD,Away,F,F2,PP2,Nico Daws (probable),3.30,5,14%,22.7%,23.5%,0.70,25.1%,32.0%,+213,,0,9,2,\n", "2": "Player,Team,Opp,H/A,Pos,Line,PP unit,Opp goalie,Goalie GAA used,GP,Weight on this season,Base chance (blend),After goalie + home/away,Shot quality z,After shot quality,Final P(goal),Odds (American),Scored today,G,SOG,High-danger SOG (0-15),\"Updated: Oct 12, 12:52 AM\"\nJesper Bratt,NJD,OTT,Home,F,F1,PP1,Linus Ullmark (probable),2.55,4,11%,23.9%,20.3%,1.03,22.8%,38.4%,+160,,1,15,8,\nQuinn Hughes,MIN,VGK,Home,D,D1,PP1,Adin Hill (probable),2.87,5,14%,15.0%,14.2%,2.60,20.9%,36.9%,+171,,2,17,1,\nLuke Evangelista,NJD,OTT,Home,F,F2,PP1,Linus Ullmark (probable),2.55,4,11%,22.1%,18.8%,0.79,20.8%,36.8%,+172,,2,12,5,\nBlake Coleman,MIN,VGK,Home,F,F2,PP2,Adin Hill (probable),2.87,5,14%,27.7%,26.3%,1.43,29.4%,35.9%,+178,,2,11,2,\nAndre Burakovsky,OTT,NJD,Away,F,F1,PP1,Nico Daws (probable),3.30,1,3%,13.5%,14.0%,-0.77,13.7%,31.1%,+221,,0,0,,\nRyan Hartman,MIN,VGK,Home,F,F2,PP2,Adin Hill (probable),2.87,5,14%,22.3%,21.2%,0.47,22.3%,29.4%,+240,,0,4,1,\nAnthony Mantha,NJD,OTT,Home,F,F1,PP2,Linus Ullmark (probable),2.55,4,11%,24.4%,20.8%,0.46,21.9%,29.1%,+244,,0,5,3,\nEetu Luostarinen,FLA,BUF,Away,F,F3,PP2,Colten Ellis (likely),3.04,5,14%,18.7%,18.0%,0.12,18.3%,25.8%,+288,,2,8,5,\nEvan Rodrigues,NJD,OTT,Home,F,F3,PP2,Linus Ullmark (probable),2.55,4,11%,19.1%,16.2%,0.45,17.3%,24.9%,+301,,0,3,0,\nIvan Barbashev,VGK,MIN,Away,F,F1,PP2,Filip Gustavsson (probable),2.77,6,17%,18.1%,15.9%,0.12,16.2%,23.9%,+318,,0,8,1,\nClaude Giroux,OTT,NJD,Away,F,F2,PP2,Nico Daws (probable),3.30,5,14%,15.8%,16.3%,-0.18,16.2%,23.9%,+318,,0,8,1,\nBobby Brink,MIN,VGK,Home,F,F3,PP2,Adin Hill (probable),2.87,5,14%,16.3%,15.4%,-0.10,15.3%,23.1%,+332,,0,9,0,\nDawson Mercer,NJD,OTT,Home,F,F3,,Linus Ullmark (probable),2.55,4,11%,19.8%,16.8%,0.64,18.4%,18.4%,+444,,0,11,3,\nKonsta Helenius,BUF,FLA,Home,F,,,Jacob Markstrom (probable),2.90,4,11%,19.2%,18.3%,-0.60,18.0%,18.0%,+456,,1,6,1,\nPeyton Krebs,BUF,FLA,Home,F,F3,,Jacob Markstrom (probable),2.90,5,14%,11.9%,11.3%,-0.87,11.0%,11.0%,+807,,0,5,2,\n", "3": "Player,Team,Opp,H/A,Pos,Line,PP unit,Opp goalie,Goalie GAA used,GP,Weight on this season,Base chance (blend),After goalie + home/away,Shot quality z,After shot quality,Final P(goal),Odds (American),Scored today,G,SOG,High-danger SOG (0-15),\"Updated: Oct 12, 12:52 AM\"\nSeth Jones,FLA,BUF,Away,D,D2,PP1,Colten Ellis (likely),3.04,5,14%,11.7%,11.2%,1.03,14.0%,31.4%,+219,,1,12,2,\nRasmus Andersson,VGK,MIN,Away,D,D2,PP2,Filip Gustavsson (probable),2.77,6,17%,13.2%,11.6%,1.68,16.0%,23.8%,+321,,0,10,0,\nShea Theodore,VGK,MIN,Away,D,D1,PP2,Filip Gustavsson (probable),2.77,6,17%,12.3%,10.8%,1.25,14.2%,22.1%,+353,,1,15,0,\nBraeden Bowman,VGK,MIN,Away,F,F4,PP2,Filip Gustavsson (probable),2.77,6,17%,15.7%,13.8%,0.05,14.0%,21.9%,+357,,1,6,4,\nCarter Yakemchuk,OTT,NJD,Away,D,D2,PP2,Nico Daws (probable),3.30,5,14%,9.2%,9.5%,0.38,10.6%,18.8%,+432,,1,7,0,\nMichael Amadio,OTT,NJD,Away,F,F2,,Nico Daws (probable),3.30,5,14%,17.8%,18.4%,-0.45,18.2%,18.2%,+450,,2,7,3,\nAaron Ekblad,FLA,BUF,Away,D,D1,PP2,Colten Ellis (likely),3.04,3,8%,6.5%,6.2%,0.22,6.9%,15.4%,+548,,0,3,0,\nAmadeus Lombardi,NJD,OTT,Home,F,F4,,Linus Ullmark (probable),2.55,4,11%,17.8%,15.1%,-0.03,15.1%,15.1%,+562,,0,5,2,\nCody Glass,NJD,OTT,Home,F,F4,,Linus Ullmark (probable),2.55,4,11%,17.8%,15.1%,-0.15,15.0%,15.0%,+567,,0,5,1,\nMarc Gatcomb,VGK,MIN,Away,F,F4,,Filip Gustavsson (probable),2.77,6,17%,12.5%,11.0%,-0.46,10.9%,10.9%,+820,,1,14,3,\nSam Carrick,BUF,FLA,Home,F,F4,,Jacob Markstrom (probable),2.90,3,8%,11.3%,10.7%,-0.94,10.4%,10.4%,+858,,0,1,0,\nYakov Trenin,MIN,VGK,Home,F,F4,,Adin Hill (probable),2.87,5,14%,10.5%,9.9%,-0.49,9.7%,9.7%,+928,,0,5,1,\nSandis Vilmanis,FLA,BUF,Away,F,F3,,Colten Ellis (likely),3.04,5,14%,8.8%,8.4%,-1.19,8.1%,8.1%,+1135,,0,7,1,\nNic Dowd,VGK,MIN,Away,F,F4,,Filip Gustavsson (probable),2.77,6,17%,8.2%,7.2%,-1.08,7.0%,7.0%,+1339,,0,4,1,\nTyson Kozak,BUF,FLA,Home,F,F4,,Jacob Markstrom (probable),2.90,1,3%,7.4%,7.0%,-1.41,6.8%,6.8%,+1381,,0,0,,\n"};
+
+// ---- CSV ------------------------------------------------------------------
+function parseCSV(text){
+  const rows=[]; let row=[], cell="", q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){cell+='"';i++;} else q=false; } else cell+=c; }
+    else if(c==='"') q=true;
+    else if(c===','){ row.push(cell); cell=""; }
+    else if(c==='\n'){ row.push(cell); rows.push(row); row=[]; cell=""; }
+    else if(c!=='\r') cell+=c;
+  }
+  if(cell!==""||row.length){ row.push(cell); rows.push(row); }
+  return rows;
+}
+function toPlayers(text){
+  const rows=parseCSV(text).filter(r=>r.length>1||r[0]);
+  if(rows.length<1) return {players:[],updated:""};
+  const head=rows[0]; let updated="";
+  const last=head[head.length-1]||"";
+  if(/^Updated:/i.test(last)) updated=last.replace(/^Updated:\s*/i,"");
+  const idx={}; head.forEach((h,i)=>{ if(h && !/^Updated:/i.test(h)) idx[h]=i; });
+  const pct=s=>{const n=parseFloat(String(s).replace('%',''));return isNaN(n)?null:n;};
+  const players=rows.slice(1).filter(r=>r[idx["Player"]]).map(r=>({
+    name:r[idx["Player"]], team:r[idx["Team"]], opp:r[idx["Opp"]], ha:r[idx["H/A"]],
+    line:r[idx["Line"]], pp:r[idx["PP unit"]],
+    goalie:r[idx["Opp goalie"]], gaa:r[idx["Goalie GAA used"]], gp:r[idx["GP"]], g:r[idx["G"]],
+    base:pct(r[idx["Base chance (blend)"]]), afterG:pct(r[idx["After goalie + home/away"]]),
+    z:r[idx["Shot quality z"]], afterQ:pct(r[idx["After shot quality"]]),
+    final:pct(r[idx["Final P(goal)"]]), odds:r[idx["Odds (American)"]],
+    scored:(r[idx["Scored today"]]||"").toLowerCase()==="yes"
+  })).filter(p=>p.final!==null);
+  players.sort((a,b)=>b.final-a.final);
+  return {players,updated};
+}
+
+// ---- Render -----------------------------------------------------------------
+let DATA={1:{players:[],updated:""},2:{players:[],updated:""},3:{players:[],updated:""}};
+let usingSnapshot=true;
+const $=s=>document.querySelector(s);
+
+function el(tag,attrs,...kids){
+  const e=document.createElement(tag);
+  for(const k in (attrs||{})){
+    if(k==="class") e.className=attrs[k]; else if(k==="text") e.textContent=attrs[k];
+    else e.setAttribute(k,attrs[k]);
+  }
+  kids.flat().forEach(c=>{ if(c!=null) e.append(c.nodeType?c:document.createTextNode(c)); });
+  return e;
+}
+const f1=n=>n==null?"–":n.toFixed(1)+"%";
+const cell=(cls,text)=>el("div",{class:cls,text});
+
+function goalieTag(s){ const m=String(s||"").match(/\((.*)\)/); return m?m[1]:""; }
+function goalieName(s){ return String(s||"?").replace(/\s*\(.*\)\s*$/,""); }
+const TEAM_COLOR={ANA:"#F47A38",BOS:"#FFB81C",BUF:"#003087",CGY:"#C8102E",CAR:"#CC0000",CHI:"#CF0A2C",COL:"#6F263D",
+  CBJ:"#002654",DAL:"#006847",DET:"#CE1126",EDM:"#FF4C00",FLA:"#C8102E",LAK:"#111111",MIN:"#154734",MTL:"#AF1E2D",
+  NSH:"#FFB81C",NJD:"#CE1126",NYI:"#00539B",NYR:"#0038A8",OTT:"#C52032",PHI:"#F74902",PIT:"#FCB514",SJS:"#006D75",
+  SEA:"#001628",STL:"#002F87",TBL:"#002868",TOR:"#00205B",UTA:"#6CACE4",VAN:"#00205B",VGK:"#B4975A",WSH:"#C8102E",WPG:"#041E42"};
+const ESPN={TBL:"tb",LAK:"la",NJD:"nj",SJS:"sj",UTA:"utah"};
+// Tries each logo source in turn; until one loads, a small colored badge with the team code shows.
+function logo(team,cls){
+  const wrap=el("span",{class:"lg",style:"display:inline-flex;flex:none"});
+  const badge=el("span",{class:"badge",text:team,style:"background:"+(TEAM_COLOR[team]||"#556")});
+  wrap.append(badge);
+  const code=(ESPN[team]||team).toLowerCase();
+  const srcs=["https://a.espncdn.com/i/teamlogos/nhl/500/"+code+".png",
+              "https://assets.nhle.com/logos/nhl/svg/"+team+"_light.svg"];
+  const tryNext=k=>{
+    if(k>=srcs.length) return;
+    const img=new Image(); img.className=cls||"logo"; img.alt=""; img.referrerPolicy="no-referrer";
+    img.onload=()=>{ wrap.textContent=""; wrap.append(img); };
+    img.onerror=()=>tryNext(k+1);
+    img.src=srcs[k];
+  };
+  tryNext(0);
+  return wrap;
+}
+const num=v=>(v===""||v==null)?"–":v;
+
+function render(){
+  const root=$("#groups"); root.textContent="";
+  [1,2,3].forEach(g=>{
+    const players=DATA[g].players;
+    const max=Math.max(...players.map(p=>p.final),1);
+    const table=el("div",{class:"table"});
+    table.append(el("div",{class:"r h"},
+      cell("",""),cell("","Player"),cell("game","Game"),cell("","Home"),cell("goalie","Goalie Faced"),
+      cell("n xga","Opp. xGA"),cell("n gp","GP"),cell("n gg","G"),
+      el("div",{class:"n"},el("span",{class:"full",text:"Scoring Probability"}),el("span",{class:"short",text:"Prob."}))));
+    if(!players.length) table.append(el("div",{class:"empty",text:"No players listed right now."}));
+    players.forEach((p,i)=>{
+      const chips=[];
+      if(p.pp) chips.push(el("span",{class:"chip "+(p.pp==="PP1"?"pp1":"pp2"),text:p.pp}));
+      if(p.line) chips.push(el("span",{class:"chip line",text:p.line}));
+      if(p.scored) chips.push(el("span",{class:"chip ok",text:"Scored"}));
+      const bar=el("div",{class:"bar"}); bar.style.width=(p.final/max*100)+"%";
+      const gn=goalieName(p.goalie), gt=goalieTag(p.goalie);
+      const home=p.ha==="Home";
+      table.append(el("div",{class:"r"+(p.scored?" scored":"")},
+        cell("rank",String(i+1)),
+        el("div",{class:"who-col"},
+          el("div",{class:"who"},logo(p.team),el("span",{class:"name",text:p.name}),...chips),
+          el("div",{class:"mob-sub"},p.team+" "+(home?"vs":"@")+" "+p.opp+" · ",logo(p.opp),gn+(gt&&!/probable/i.test(gt)?" ("+gt+")":""))),
+        cell("game",p.team+" "+(home?"vs":"@")+" "+p.opp),
+        home?cell("yes","Yes"):cell("no","–"),
+        el("div",{class:"gl goalie",title:p.goalie},logo(p.opp),
+          el("span",{},gn,gt?el("span",{class:"tag"+(/confirmed/i.test(gt)?" conf":""),text:" "+gt}):null)),
+        cell("n xga",p.gaa?parseFloat(p.gaa).toFixed(2):"–"),
+        cell("n gp",num(p.gp)),cell("n gg",num(p.g)),
+        el("div",{class:"fin"},el("div",{class:"track"},bar),el("b",{text:f1(p.final)}))));
+    });
+    root.append(el("section",{},
+      el("h2",{},GROUP_NAMES[g],el("small",{text:players.length+" players"})),table));
+  });
+}
+
+function renderStamp(){
+  const u=DATA[1].updated||DATA[2].updated||DATA[3].updated;
+  $("#stamp").textContent="";
+  if(u) $("#stamp").append("Updated ",el("b",{text:u})," (Alberta time)");
+  const b=$("#banner");
+  if(usingSnapshot){ b.style.display="block"; b.textContent="Showing a saved snapshot, not live data."; }
+  else b.style.display="none";
+}
+
+function setData(map,live){
+  [1,2,3].forEach(g=>{ DATA[g]=toPlayers(map[g]||""); });
+  usingSnapshot=!live; render(); renderStamp();
+}
+
+async function load(){
+  const urls=Object.values(SHEET_CSV);
+  if(!urls.every(Boolean)){ setData(SNAPSHOT,false); return; }
+  try{
+    const out={};
+    await Promise.all([1,2,3].map(async g=>{
+      const sep=SHEET_CSV[g].includes("?")?"&":"?";
+      const r=await fetch(SHEET_CSV[g]+sep+"t="+Date.now());
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      out[g]=await r.text();
+    }));
+    setData(out,true);
+  }catch(e){
+    if(usingSnapshot||!DATA[1].players.length) setData(SNAPSHOT,false);
+    else renderStamp();
+  }
+}
+load();
+if(Object.values(SHEET_CSV).every(Boolean)) setInterval(load,REFRESH_MS);
+</script>
+</body>
+</html>
