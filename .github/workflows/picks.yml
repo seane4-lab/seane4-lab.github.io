@@ -45,6 +45,13 @@ jobs:
           GOOGLE_SHEET_ID: ${{ secrets.SHEET_ID }}
           ARTIFACT_DIR: ${{ runner.temp }}
 
+      - name: Capture goalie starters and write to the sheet
+        if: ${{ !cancelled() }}
+        run: python goaliepost_starters.py
+        env:
+          SERVICE_ACCOUNT_FILE: ${{ runner.temp }}/key.json
+          GOOGLE_SHEET_ID: ${{ secrets.SHEET_ID }}
+
       - name: Keep the failure screenshot
         if: failure()
         uses: actions/upload-artifact@v4
