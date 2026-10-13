@@ -34,6 +34,7 @@ ARTIFACT_DIR = os.environ.get("ARTIFACT_DIR", r"C:\Users\seane\OneDrive")
 URL_HOME = "https://hockeychallengehelper.com"
 DEFAULT_SHEET = "TH Picks"
 UTC_OFFSET_HOURS = -6          # Alberta, fixed
+NEW_POOL_HOUR = 22             # the site posts the next day's pool at 10 PM local
 
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
@@ -45,8 +46,12 @@ BLOCK_MARKERS = ("access denied", "just a moment", "attention required",
                  "verify you are human", "error 1020", "forbidden", "captcha")
 
 
+def local_now():
+    return datetime.now(timezone.utc) + timedelta(hours=UTC_OFFSET_HOURS)
+
+
 def local_today():
-    return (datetime.now(timezone.utc) + timedelta(hours=UTC_OFFSET_HOURS)).strftime("%Y-%m-%d")
+    return local_now().strftime("%Y-%m-%d")
 
 
 # ---------- Google Sheets helpers ----------
@@ -208,7 +213,9 @@ def gate():
     skip = False
     try:
         ws = gs_open().worksheet("PicksJSON")
-        skip = (ws.acell("E2").value or "").strip() == local_today()
+        closed_today = (ws.acell("E2").value or "").strip() == local_today()
+        # After 10 PM the site lists tomorrow's pool, so never skip then.
+        skip = closed_today and local_now().hour < NEW_POOL_HOUR
     except Exception as e:
         print("Gate could not read the sheet; carrying on:", e)
     print("Today's pool has closed. Skipping the browser steps." if skip
