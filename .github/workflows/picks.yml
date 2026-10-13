@@ -3,10 +3,13 @@ name: Pull picks
 on:
   schedule:
     # Times are UTC. Alberta is UTC-6 all year, so 14:45 UTC = 8:45 AM.
-    # 25 runs per day, every 30 minutes, 8:45 AM to 8:45 PM Alberta time.
+    # 25 runs per day, every 30 minutes, 8:45 AM to 8:45 PM Alberta time,
+    # plus two late runs (10:15 PM and midnight) for the next day's pool.
     - cron: "45 14 * * *"          # 8:45 AM
     - cron: "15,45 15-23 * * *"    # 9:15 AM to 5:45 PM
     - cron: "15,45 0-2 * * *"      # 6:15 PM to 8:45 PM
+    - cron: "15 4 * * *"           # 10:15 PM  (the site posts tomorrow's pool at 10 PM)
+    - cron: "0 6 * * *"            # 12:00 AM  (new day: refresh picks and starting goalies)
   workflow_dispatch:   # lets you press "Run workflow" by hand
 
 jobs:
