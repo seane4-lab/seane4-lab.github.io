@@ -170,6 +170,13 @@ const f1=n=>n==null?"–":n.toFixed(1)+"%";
 const cell=(cls,text)=>el("div",{class:cls,text});
 
 function goalieTag(s){ const m=String(s||"").match(/\((.*)\)/); return m?m[1]:""; }
+function shortName(n){
+  n=String(n||"").trim(); const i=n.indexOf(" ");
+  if(i<0) return n;
+  const first=n.slice(0,i), rest=n.slice(i+1);
+  if(first.indexOf(".")>=0||first.indexOf("-")>=0&&false) return n;   // already initials (e.g. J.T.)
+  return first.charAt(0)+". "+rest;
+}
 function goalieName(s){ return String(s||"?").replace(/\s*\(.*\)\s*$/,""); }
 const TEAM_COLOR={ANA:"#F47A38",BOS:"#FFB81C",BUF:"#003087",CGY:"#C8102E",CAR:"#CC0000",CHI:"#CF0A2C",COL:"#6F263D",
   CBJ:"#002654",DAL:"#006847",DET:"#CE1126",EDM:"#FF4C00",FLA:"#C8102E",LAK:"#111111",MIN:"#154734",MTL:"#AF1E2D",
@@ -218,7 +225,7 @@ function render(){
       table.append(el("div",{class:"r"+(p.scored?" scored":"")},
         cell("rank",String(i+1)),
         el("div",{class:"who-col"},
-          el("div",{class:"who"},logo(p.team),el("span",{class:"name",text:p.name}),...chips),
+          el("div",{class:"who"},logo(p.team),el("span",{class:"name"},el("span",{class:"full",text:p.name}),el("span",{class:"short",text:shortName(p.name)})),...chips),
           el("div",{class:"mob-sub"},p.team+" "+(home?"vs":"@")+" "+p.opp+" · ",logo(p.opp),gn+(gt&&!/probable/i.test(gt)?" ("+gt+")":""))),
         cell("game",p.team+" "+(home?"vs":"@")+" "+p.opp),
         home?cell("yes","Yes"):cell("no","–"),
