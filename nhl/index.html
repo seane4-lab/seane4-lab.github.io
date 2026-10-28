@@ -235,7 +235,7 @@ function render(){
         cell("rank",String(i+1)),
         el("div",{class:"who-col"},
           el("div",{class:"who"},logo(p.team),el("span",{class:"name"},el("span",{class:"full",text:p.name}),el("span",{class:"short",text:shortName(p.name)})),...chips),
-          el("div",{class:"mob-sub"},p.team+" "+(home?"vs":"@")+" "+p.opp+" · ",logo(p.opp),gn+(gt&&!/probable/i.test(gt)?" ("+gt+")":""))),
+          el("div",{class:"mob-sub"},p.team+" "+(home?"vs":"@")+" "+p.opp+" · ",logo(p.opp),shortName(gn)+(gt&&!/probable/i.test(gt)?" ("+gt+")":""))),
         cell("game",p.team+" "+(home?"vs":"@")+" "+p.opp),
         home?cell("yes","Yes"):cell("no","–"),
         el("div",{class:"gl goalie",title:p.goalie},logo(p.opp),
