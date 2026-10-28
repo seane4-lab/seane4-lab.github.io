@@ -86,6 +86,15 @@ section h2 small{font-weight:400;color:var(--muted);font-size:.78rem}
   .mob-sub{display:flex}
   .full{display:none}
   .short{display:inline}
+  /* give the name the room: smaller logo/chips/columns, tighter gaps */
+  .r{grid-template-columns:16px minmax(0,1fr) 30px 50px;gap:0 5px;padding:4px 8px}
+  .who{gap:2px 4px;flex-wrap:wrap}
+  .who .logo{width:16px;height:16px}
+  .chip{padding:0 4px;font-size:.6rem}
+  .name{font-size:.88rem;flex:0 0 auto;max-width:calc(100% - 20px)}
+  .rank{font-size:.72rem}
+  .yes{font-size:.74rem}
+  .fin b{font-size:.92rem}
 }
 </style>
 </head>
