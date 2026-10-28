@@ -76,6 +76,11 @@ section h2 small{font-weight:400;color:var(--muted);font-size:.78rem}
 .mob-sub{display:none;gap:5px;align-items:center;color:var(--muted);font-size:.74rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mob-sub .logo{width:14px;height:14px}
 .short{display:none}
+.chip.home{display:none;background:var(--pp1);color:var(--pp1-ink)}
+.gi{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;box-sizing:border-box;border:1.5px solid currentColor;border-radius:50%;flex:none;background:transparent;font-size:.66rem;font-weight:800;line-height:1;font-style:normal}
+.gi.confirmed{color:var(--good)} .gi.likely{color:var(--accent)} .gi.probable{color:#d19a00}
+.legend{display:none;gap:4px 12px;flex-wrap:wrap;align-items:center;color:var(--muted);font-size:.74rem;margin:0 0 10px}
+.legend span{display:inline-flex;align-items:center;gap:4px}
 .who-col{min-width:0}
 @media (max-width:760px){
   .r{grid-template-columns:20px minmax(0,1fr) 40px 58px;gap:0 6px;padding:4px 10px}
@@ -87,7 +92,10 @@ section h2 small{font-weight:400;color:var(--muted);font-size:.78rem}
   .full{display:none}
   .short{display:inline}
   /* give the name the room: smaller logo/chips/columns, tighter gaps */
-  .r{grid-template-columns:16px minmax(0,1fr) 30px 50px;gap:0 5px;padding:4px 8px}
+  .r{grid-template-columns:16px minmax(0,1fr) 50px;gap:0 5px;padding:4px 8px}
+  .r > .yes,.r > .no,.r > .homecol{display:none}
+  .chip.home{display:inline-block}
+  .legend{display:flex}
   .who{gap:2px 4px;flex-wrap:wrap}
   .who .logo{width:16px;height:16px}
   .chip{padding:0 4px;font-size:.6rem}
@@ -107,6 +115,12 @@ section h2 small{font-weight:400;color:var(--muted);font-size:.78rem}
     </div>
     <div class="stamp" id="stamp"></div>
   </header>
+  <div class="legend" aria-label="Goalie status key">
+    <b>Goalie:</b>
+    <span><i class="gi confirmed">✓</i>Confirmed</span>
+    <span><i class="gi likely">✓</i>Likely</span>
+    <span><i class="gi probable">?</i>Probable</span>
+  </div>
   <div class="banner" id="banner"></div>
   <main id="groups"></main>
 </div>
@@ -186,6 +200,12 @@ function shortName(n){
   if(first.indexOf(".")>=0||first.indexOf("-")>=0&&false) return n;   // already initials (e.g. J.T.)
   return first.charAt(0)+". "+rest;
 }
+function goalieIcon(t){
+  const k=String(t||"").toLowerCase();
+  const kind=/confirm/.test(k)?"confirmed":/likely/.test(k)?"likely":/probable/.test(k)?"probable":"";
+  if(!kind) return t?" ("+t+")":null;
+  return el("i",{class:"gi "+kind,title:kind,text:kind==="probable"?"?":"✓"});
+}
 function goalieName(s){ return String(s||"?").replace(/\s*\(.*\)\s*$/,""); }
 const TEAM_COLOR={ANA:"#F47A38",BOS:"#FFB81C",BUF:"#003087",CGY:"#C8102E",CAR:"#CC0000",CHI:"#CF0A2C",COL:"#6F263D",
   CBJ:"#002654",DAL:"#006847",DET:"#CE1126",EDM:"#FF4C00",FLA:"#C8102E",LAK:"#111111",MIN:"#154734",MTL:"#AF1E2D",
@@ -219,7 +239,7 @@ function render(){
     const max=Math.max(...players.map(p=>p.final),1);
     const table=el("div",{class:"table"});
     table.append(el("div",{class:"r h"},
-      cell("",""),cell("","Player"),cell("game","Game"),cell("","Home"),cell("goalie","Goalie Faced"),
+      cell("",""),cell("","Player"),cell("game","Game"),cell("homecol","Home"),cell("goalie","Goalie Faced"),
       cell("n xga","Opp. xGA"),cell("n gp","GP"),cell("n gg","G"),
       el("div",{class:"n"},el("span",{class:"full",text:"Scoring Probability"}),el("span",{class:"short",text:"Prob."}))));
     if(!players.length) table.append(el("div",{class:"empty",text:"No players listed right now."}));
@@ -227,6 +247,7 @@ function render(){
       const chips=[];
       if(p.pp) chips.push(el("span",{class:"chip "+(p.pp==="PP1"?"pp1":"pp2"),text:p.pp}));
       if(p.line) chips.push(el("span",{class:"chip line",text:p.line}));
+      if(p.ha==="Home") chips.push(el("span",{class:"chip home",text:"Home"}));
       if(p.scored) chips.push(el("span",{class:"chip ok",text:"Scored"}));
       const bar=el("div",{class:"bar"}); bar.style.width=(p.final/max*100)+"%";
       const gn=goalieName(p.goalie), gt=goalieTag(p.goalie);
@@ -235,7 +256,7 @@ function render(){
         cell("rank",String(i+1)),
         el("div",{class:"who-col"},
           el("div",{class:"who"},logo(p.team),el("span",{class:"name"},el("span",{class:"full",text:p.name}),el("span",{class:"short",text:shortName(p.name)})),...chips),
-          el("div",{class:"mob-sub"},p.team+" "+(home?"vs":"@")+" "+p.opp+" · ",logo(p.opp),shortName(gn)+(gt&&!/probable/i.test(gt)?" ("+gt+")":""))),
+          el("div",{class:"mob-sub"},p.team+" "+(home?"vs":"@")+" "+p.opp+" · ",logo(p.opp),shortName(gn),goalieIcon(gt))),
         cell("game",p.team+" "+(home?"vs":"@")+" "+p.opp),
         home?cell("yes","Yes"):cell("no","–"),
         el("div",{class:"gl goalie",title:p.goalie},logo(p.opp),
