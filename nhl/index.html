@@ -77,32 +77,33 @@ section h2 small{font-weight:400;color:var(--muted);font-size:.78rem}
 .mob-sub .logo{width:14px;height:14px}
 .short{display:none}
 .chip.home{display:none;background:var(--pp1);color:var(--pp1-ink)}
-.gi{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;box-sizing:border-box;border:1.5px solid currentColor;border-radius:50%;flex:none;background:transparent;font-size:.66rem;font-weight:800;line-height:1;font-style:normal}
-.gi.confirmed{color:var(--good)} .gi.likely{color:var(--accent)} .gi.probable{color:#d19a00}
+.gi{font-style:normal;font-weight:700;color:inherit;flex:none}
 .legend{display:none;gap:4px 12px;flex-wrap:wrap;align-items:center;color:var(--muted);font-size:.74rem;margin:0 0 10px}
 .legend span{display:inline-flex;align-items:center;gap:4px}
 .who-col{min-width:0}
 @media (max-width:760px){
   .r{grid-template-columns:20px minmax(0,1fr) 40px 58px;gap:0 6px;padding:4px 10px}
   .r > .goalie,.r > .game,.r > .xga,.r > .gp,.r > .gg,.r .track{display:none}
-  .chip.line{display:none}
   .fin{justify-content:flex-end}
   .fin b{min-width:0}
   .mob-sub{display:flex}
   .full{display:none}
   .short{display:inline}
   /* give the name the room: smaller logo/chips/columns, tighter gaps */
-  .r{grid-template-columns:16px minmax(0,1fr) 50px;gap:0 5px;padding:4px 8px}
-  .r > .yes,.r > .no,.r > .homecol{display:none}
-  .chip.home{display:inline-block}
+  .r{grid-template-columns:minmax(0,1fr) 36px 52px;gap:0 4px;padding:4px 8px}
+  .r > .rank,.r > .empty-rank{display:none}
+  .yes,.no{font-size:.78rem;text-align:center;overflow:visible;white-space:nowrap}
+  .r > .homecol{text-align:center}
+  .r.h .n{font-size:.8rem}
+  .homecol .full{display:inline}
+  .homecol .short{display:none}
   .legend{display:flex}
   .who{gap:2px 4px;flex-wrap:wrap}
   .who .logo{width:16px;height:16px}
   .chip{padding:0 4px;font-size:.6rem}
   .name{font-size:.88rem;flex:0 0 auto;max-width:calc(100% - 20px)}
   .rank{font-size:.72rem}
-  .yes{font-size:.74rem}
-  .fin b{font-size:.92rem}
+  .fin b{font-size:1rem}
 }
 </style>
 </head>
@@ -117,9 +118,9 @@ section h2 small{font-weight:400;color:var(--muted);font-size:.78rem}
   </header>
   <div class="legend" aria-label="Goalie status key">
     <b>Goalie:</b>
-    <span><i class="gi confirmed">✓</i>Confirmed</span>
-    <span><i class="gi likely">✓</i>Likely</span>
-    <span><i class="gi probable">?</i>Probable</span>
+    <span><i class="gi">✓</i> Confirmed</span>
+    <span><i class="gi">~</i> Likely</span>
+    <span><i class="gi">?</i> Probable</span>
   </div>
   <div class="banner" id="banner"></div>
   <main id="groups"></main>
@@ -204,7 +205,7 @@ function goalieIcon(t){
   const k=String(t||"").toLowerCase();
   const kind=/confirm/.test(k)?"confirmed":/likely/.test(k)?"likely":/probable/.test(k)?"probable":"";
   if(!kind) return t?" ("+t+")":null;
-  return el("i",{class:"gi "+kind,title:kind,text:kind==="probable"?"?":"✓"});
+  return el("i",{class:"gi "+kind,title:kind,text:kind==="probable"?"?":kind==="likely"?"~":"✓"});
 }
 function goalieName(s){ return String(s||"?").replace(/\s*\(.*\)\s*$/,""); }
 const TEAM_COLOR={ANA:"#F47A38",BOS:"#FFB81C",BUF:"#003087",CGY:"#C8102E",CAR:"#CC0000",CHI:"#CF0A2C",COL:"#6F263D",
@@ -239,7 +240,7 @@ function render(){
     const max=Math.max(...players.map(p=>p.final),1);
     const table=el("div",{class:"table"});
     table.append(el("div",{class:"r h"},
-      cell("",""),cell("","Player"),cell("game","Game"),cell("homecol","Home"),cell("goalie","Goalie Faced"),
+      cell("rank",""),cell("","Player"),cell("game","Game"),el("div",{class:"homecol"},el("span",{class:"full",text:"Home"}),el("span",{class:"short",text:"H"})),cell("goalie","Goalie Faced"),
       cell("n xga","Opp. xGA"),cell("n gp","GP"),cell("n gg","G"),
       el("div",{class:"n"},el("span",{class:"full",text:"Scoring Probability"}),el("span",{class:"short",text:"Prob."}))));
     if(!players.length) table.append(el("div",{class:"empty",text:"No players listed right now."}));
